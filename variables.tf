@@ -241,3 +241,13 @@ variable "TF_PARALLELISM" {
     error_message = "Input \"TF_PARALLELISM\" must be >= 1 and <= 256."
   }
 }
+
+variable "node_volume_bandwidth" {
+  type        = number
+  default     = 500
+  description = "Volume bandwidth in Gbps for Worker nodes. The minimum is 500 Gbps."
+  validation {
+    condition     = 500 <= var.node_volume_bandwidth
+    error_message = "Input \"worker_volume_bandwidth\" must be >= 500 (in Gbps)."
+  }
+}

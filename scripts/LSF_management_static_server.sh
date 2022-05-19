@@ -141,6 +141,7 @@ sed -i "s/RESOURCE_RECORDS_APIKEY=/RESOURCE_RECORDS_APIKEY=$RESOURCE_RECORDS_API
 #Update IBM gen2 template
 sed -i "s/imageId-value/${imageID}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/subnetId-value/${subnetID}/" $IBM_CLOUD_TEMPLATE_FILE
+sed -i "s/secSubnetId-value/${secSubnetID}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/vpcId-value/${vpcID}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/securityGroupIds-value/${securityGroupID}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/sshkey_id-value/${sshkey_ID}/" $IBM_CLOUD_TEMPLATE_FILE

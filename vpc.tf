@@ -97,6 +97,7 @@ data "template_file" "master_user_data" {
     resource_records_apikey_value = var.api_key
     image_id                      = local.image_mapping_entry_found ? local.new_image_id : data.ibm_is_image.image[0].id
     subnet_id                     = ibm_is_subnet.subnet.id
+    sec_subnet_id                 = ibm_is_subnet.subnet1.id
     security_group_id             = ibm_is_security_group.sg.id
     sshkey_id                     = data.ibm_is_ssh_key.ssh_key[local.ssh_key_list[0]].id
     region_name                   = data.ibm_is_region.region.name
@@ -157,6 +158,16 @@ resource "ibm_is_subnet" "login_subnet" {
 
 resource "ibm_is_subnet" "subnet" {
   name                     = "${var.cluster_prefix}-subnet"
+  vpc                      = data.ibm_is_vpc.vpc.id
+  zone                     = data.ibm_is_zone.zone.name
+  total_ipv4_address_count = local.total_ipv4_address_count
+  public_gateway           = ibm_is_public_gateway.mygateway.id
+  resource_group           = data.ibm_resource_group.rg.id
+  tags                     = local.tags
+}
+
+resource "ibm_is_subnet" "subnet1" {
+  name                     = "${var.cluster_prefix}-subnet1"
   vpc                      = data.ibm_is_vpc.vpc.id
   zone                     = data.ibm_is_zone.zone.name
   total_ipv4_address_count = local.total_ipv4_address_count
@@ -416,6 +427,12 @@ resource "ibm_is_instance" "master" {
     security_groups      = [ibm_is_security_group.sg.id]
     primary_ipv4_address = local.master_ips[count.index]
   }
+  network_interfaces {
+    name                 = "eth1"
+    subnet               = ibm_is_subnet.subnet1.id
+    security_groups      = [ibm_is_security_group.sg.id]
+  }
+  #total_volume_bandwidth = var.node_volume_bandwidth
   depends_on = [
     ibm_is_instance.storage,
     ibm_is_security_group_rule.ingress_tcp,
@@ -441,6 +458,12 @@ resource "ibm_is_instance" "master_candidate" {
     security_groups      = [ibm_is_security_group.sg.id]
     primary_ipv4_address = local.master_ips[count.index + 1]
   }
+  network_interfaces {
+    name                 = "eth1"
+    subnet               = ibm_is_subnet.subnet1.id
+    security_groups      = [ibm_is_security_group.sg.id]
+  }
+  #total_volume_bandwidth = var.node_volume_bandwidth
   depends_on = [
     ibm_is_instance.storage,
     ibm_is_instance.master,
@@ -467,6 +490,12 @@ resource "ibm_is_instance" "worker" {
     subnet               = ibm_is_subnet.subnet.id
     security_groups      = [ibm_is_security_group.sg.id]
   }
+  network_interfaces {
+    name                 = "eth1"
+    subnet               = ibm_is_subnet.subnet1.id
+    security_groups      = [ibm_is_security_group.sg.id]
+  }
+  #total_volume_bandwidth = var.node_volume_bandwidth
   depends_on = [
     ibm_is_instance.storage,
     ibm_is_instance.master,
