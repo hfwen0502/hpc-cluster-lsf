@@ -128,7 +128,8 @@ sed -i "s/master_hosts.*/master_hosts (${ManagementHostNames} )/g" $LSB_HOSTS_FI
 #sed -i "s/MQTT_BROKER_PORT=/#MQTT_BROKER_PORT=/g" $LSF_CONF_FILE
 
 # when we request a lot of machines, it may need close to 5 minutes for all the nodes to join the cluster.
-sed -i "s/LSB_RC_EXTERNAL_HOST_IDLE_TIME=.*/LSB_RC_EXTERNAL_HOST_IDLE_TIME=10/g" $LSF_CONF_FILE
+# NOTE: For A100 nodes, we need 5 minutes+. Increase this to one hour for now.
+sed -i "s/LSB_RC_EXTERNAL_HOST_IDLE_TIME=.*/LSB_RC_EXTERNAL_HOST_IDLE_TIME=60/g" $LSF_CONF_FILE
 
 #update user_data.sh
 sed -i "s/ServerHostPlaceHolder/${ManagementHostNames}/" $IBM_CLOUD_USER_DATA_FILE
@@ -154,6 +155,9 @@ sed -i "s/template1-vmType/${rc_profile}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/template1_maxNum/${rc_maxNum}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/rgId-value/${rc_rg}/" $IBM_CLOUD_TEMPLATE_FILE
 sed -i "s/icgen2host/${vmPrefix}/" $IBM_CLOUD_CONF_FILE
+sed -i "s/template1-gpu\b/${rc_gpu}/" $IBM_CLOUD_TEMPLATE_FILE
+sed -i "s/template1-ngpus\b/${rc_ngpus}/" $IBM_CLOUD_TEMPLATE_FILE
+sed -i "s/template1-ngpus_physical/${rc_ngpus_physical}/" $IBM_CLOUD_TEMPLATE_FILE
 
 if $hyperthreading; then
   echo "EGO_DEFINE_NCPUS=threads" >> $LSF_CONF_FILE

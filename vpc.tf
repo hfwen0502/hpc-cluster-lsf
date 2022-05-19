@@ -110,6 +110,9 @@ data "template_file" "master_user_data" {
     rc_memInMB                    = local.memInMB
     rc_maxNum                     = local.rc_maxNum
     rc_rg                         = data.ibm_resource_group.rg.id
+    rc_gpu                        = (data.ibm_is_instance_profile.compute_profile.gpu_count[0].value > 0)? 1:0
+    rc_ngpus                      = data.ibm_is_instance_profile.compute_profile.gpu_count[0].value
+    rc_ngpus_physical             = data.ibm_is_instance_profile.compute_profile.gpu_count[0].value
     master_ips                    = join(" ", local.master_ips)
     storage_ips                   = join(" ", local.storage_ips)
     hyperthreading                = var.hyperthreading_enabled
@@ -560,4 +563,8 @@ resource "ibm_is_security_group_rule" "ingress_vpn" {
   group     = ibm_is_security_group.sg.id
   direction = "inbound"
   remote    = local.peer_cidr_list[count.index]
+}
+
+data "ibm_is_instance_profile" "compute_profile" {
+  name = var.worker_node_instance_type
 }
