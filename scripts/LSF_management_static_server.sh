@@ -200,6 +200,10 @@ fi
 sed -i 's#for ((i=1; i<=254; i++))#for ((i=1; i<=0; i++))#g' $IBM_CLOUD_USER_DATA_FILE
 sed -i "/# Add your customization script here/r /tmp/client.sh" $IBM_CLOUD_USER_DATA_FILE
 
+if $optimization && [ -f /etc/guest-config-opt.sh ] ; then
+  echo "/etc/guest-config-opt.sh" >> $IBM_CLOUD_USER_DATA_FILE
+fi
+
 #Move the lsf intallation to the share location
 mkdir -p /mnt/$nfs_mount_dir/lsf_$ManagementHostName.tmp
 cp -a -r /opt/ibm/lsf/conf /mnt/$nfs_mount_dir/lsf_$ManagementHostName.tmp/conf

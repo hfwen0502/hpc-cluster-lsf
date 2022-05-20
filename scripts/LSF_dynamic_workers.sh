@@ -103,4 +103,10 @@ lsf_daemons status >> $logfile
 # Due To Polkit Local Privilege Escalation Vulnerability
 chmod 0755 /usr/bin/pkexec
 
+if $optimization && [ -f /etc/guest-config-opt.sh ] ; then
+  echo "Applying network and GPU optimization..." >> $logfile
+  /etc/guest-config-opt.sh
+fi
+
 echo END `date '+%Y-%m-%d %H:%M:%S'` >> $logfile
+

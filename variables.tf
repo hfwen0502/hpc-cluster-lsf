@@ -251,3 +251,9 @@ variable "node_volume_bandwidth" {
     error_message = "Input \"worker_volume_bandwidth\" must be >= 500 (in Gbps)."
   }
 }
+
+variable "optimization_enabled" {
+  type = bool
+  default = true
+  description = "Setting this to true will enable optimization in networking and GPUs. Will ignore if compute instances are not A100!"
+}

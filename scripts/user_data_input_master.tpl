@@ -43,6 +43,7 @@ master_ips="${master_ips}"
 storage_ips="${storage_ips}"
 cluster_name="HPCCluster"
 hyperthreading="${hyperthreading}"
+optimization="${optimization}"
 # about GPUs
 rc_gpu=${rc_gpu}
 rc_ngpus=${rc_ngpus}

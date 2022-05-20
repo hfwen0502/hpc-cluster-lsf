@@ -61,6 +61,7 @@ locals {
   ncpus                 = var.hyperthreading_enabled ? local.vcpus : local.ncores
   memInMB               = tonumber(data.ibm_is_instance_profile.worker.memory[0].value) * 1024
   rc_maxNum             = var.worker_node_max_count > var.worker_node_min_count ? var.worker_node_max_count - var.worker_node_min_count : 0
+  ngpus                 = data.ibm_is_instance_profile.compute_profile.gpu_count == null ? 0:data.ibm_is_instance_profile.compute_profile.gpu_count[0].value
 }
 
 locals {
@@ -110,12 +111,13 @@ data "template_file" "master_user_data" {
     rc_memInMB                    = local.memInMB
     rc_maxNum                     = local.rc_maxNum
     rc_rg                         = data.ibm_resource_group.rg.id
-    rc_gpu                        = (data.ibm_is_instance_profile.compute_profile.gpu_count[0].value > 0)? 1:0
-    rc_ngpus                      = data.ibm_is_instance_profile.compute_profile.gpu_count[0].value
-    rc_ngpus_physical             = data.ibm_is_instance_profile.compute_profile.gpu_count[0].value
+    rc_gpu                        = local.ngpus > 0 ? 1:0
+    rc_ngpus                      = local.ngpus
+    rc_ngpus_physical             = local.ngpus
     master_ips                    = join(" ", local.master_ips)
     storage_ips                   = join(" ", local.storage_ips)
     hyperthreading                = var.hyperthreading_enabled
+    optimization                  = var.worker_node_instance_type == "gx2-80x1280x8a100-internal" && var.optimization_enabled ? true:false
   }
 }
 
@@ -126,6 +128,7 @@ data "template_file" "worker_user_data" {
     master_ips     = join(" ", local.master_ips)
     storage_ips    = join(" ", local.storage_ips)
     hyperthreading = var.hyperthreading_enabled
+    optimization = var.worker_node_instance_type == "gx2-80x1280x8a100-internal" && var.optimization_enabled ? true:false
   }
 }
 
