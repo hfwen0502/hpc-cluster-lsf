@@ -1,4 +1,3 @@
-% cat terraform.tfvars 
 api_key = "<your api key>"
 lsf_license_confirmation="true"
 
