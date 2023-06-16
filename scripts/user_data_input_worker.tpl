@@ -21,3 +21,5 @@ storage_ips="${storage_ips}"
 cluster_name="HPCCluster"
 hyperthreading="${hyperthreading}"
 optimization="${optimization}"
+node_exporter_port=${node_exporter_port}
+dcgm_port=${dcgm_port}

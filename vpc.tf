@@ -62,6 +62,10 @@ locals {
   memInMB               = tonumber(data.ibm_is_instance_profile.worker.memory[0].value) * 1024
   rc_maxNum             = var.worker_node_max_count > var.worker_node_min_count ? var.worker_node_max_count - var.worker_node_min_count : 0
   ngpus                 = data.ibm_is_instance_profile.compute_profile.gpu_count == null ? 0:data.ibm_is_instance_profile.compute_profile.gpu_count[0].value
+  grafana_port          = 3000
+  prometheus_port       = 9010
+  node_exporter_port    = 9020
+  dcgm_port             = 9400
 }
 
 locals {
@@ -118,6 +122,9 @@ data "template_file" "master_user_data" {
     storage_ips                   = join(" ", local.storage_ips)
     hyperthreading                = var.hyperthreading_enabled
     optimization                  = var.worker_node_instance_type == "gx2-80x1280x8a100-internal" && var.optimization_enabled ? true:false
+    prometheus_port               = local.prometheus_port
+    node_exporter_port            = local.node_exporter_port
+    dcgm_port                     = local.dcgm_port
   }
 }
 
@@ -129,6 +136,9 @@ data "template_file" "worker_user_data" {
     storage_ips    = join(" ", local.storage_ips)
     hyperthreading = var.hyperthreading_enabled
     optimization = var.worker_node_instance_type == "gx2-80x1280x8a100-internal" && var.optimization_enabled ? true:false
+    prometheus_port               = local.prometheus_port
+    node_exporter_port            = local.node_exporter_port
+    dcgm_port                     = local.dcgm_port
   }
 }
 
@@ -189,6 +199,30 @@ resource "ibm_is_security_group" "login_sg" {
   tags           = local.tags
 }
 
+resource "ibm_is_security_group_rule" "login_ingress_grafana" {
+  for_each  = toset(split(",", var.ssh_allowed_ips))
+  group     = ibm_is_security_group.login_sg.id
+  direction = "inbound"
+  remote    = each.value
+
+  tcp {
+    port_min = local.grafana_port
+    port_max = local.grafana_port
+  }
+}
+
+resource "ibm_is_security_group_rule" "login_ingress_prometheus" {
+  for_each  = toset(split(",", var.ssh_allowed_ips))
+  group     = ibm_is_security_group.login_sg.id
+  direction = "inbound"
+  remote    = each.value
+
+  tcp {
+    port_min = local.prometheus_port
+    port_max = local.prometheus_port
+  }
+}
+
 resource "ibm_is_security_group_rule" "login_ingress_tcp" {
   #for_each  = toset(var.ssh_allowed_ips)
   for_each  = toset(split(",", var.ssh_allowed_ips))
@@ -223,6 +257,26 @@ resource "ibm_is_security_group_rule" "login_ingress_udp_rhsm" {
   udp {
     port_min = 1
     port_max = 65535
+  }
+}
+
+resource "ibm_is_security_group_rule" "login_egress_grafana" {
+  group     = ibm_is_security_group.login_sg.id
+  direction = "outbound"
+  remote    = ibm_is_security_group.sg.id
+  tcp {
+    port_min = local.grafana_port
+    port_max = local.grafana_port
+  }
+}
+
+resource "ibm_is_security_group_rule" "login_egress_prometheus" {
+  group     = ibm_is_security_group.login_sg.id
+  direction = "outbound"
+  remote    = ibm_is_security_group.sg.id
+  tcp {
+    port_min = local.prometheus_port
+    port_max = local.prometheus_port
   }
 }
 
@@ -271,6 +325,28 @@ resource "ibm_is_security_group_rule" "ingress_tcp" {
   tcp {
     port_min = 22
     port_max = 22
+  }
+}
+
+resource "ibm_is_security_group_rule" "ingress_tcp_grafana" {
+  group     = ibm_is_security_group.sg.id
+  direction = "inbound"
+  remote    = ibm_is_security_group.login_sg.id
+
+  tcp {
+    port_min = local.grafana_port
+    port_max = local.grafana_port
+  }
+}
+
+resource "ibm_is_security_group_rule" "ingress_tcp_prometheus" {
+  group     = ibm_is_security_group.sg.id
+  direction = "inbound"
+  remote    = ibm_is_security_group.login_sg.id
+
+  tcp {
+    port_min = local.prometheus_port
+    port_max = local.prometheus_port
   }
 }
 

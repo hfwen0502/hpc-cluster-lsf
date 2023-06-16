@@ -108,5 +108,16 @@ if $optimization && [ -f /etc/guest-config-opt.sh ] ; then
   /etc/guest-config-opt.sh
 fi
 
+# fix the expiration password for lsfadmin
+# passwd lsfadmin -x -1
+
+# start node_exporter
+echo "Start the node_exporter server using port ${node_exporter_port}..." >> $logfile
+/opt/node_exporter-1.3.1/node_exporter --web.listen-address=":${node_exporter_port}" &
+
+# start dcgm-exporter
+#echo "Start the dcgm-exporter server using port ${dcgm_port}..." >> $logfile
+#/usr/bin/dcgm-exporter &
+
 echo END `date '+%Y-%m-%d %H:%M:%S'` >> $logfile
 

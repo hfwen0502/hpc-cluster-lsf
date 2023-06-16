@@ -48,3 +48,7 @@ optimization="${optimization}"
 rc_gpu=${rc_gpu}
 rc_ngpus=${rc_ngpus}
 rc_ngpus_physical=${rc_ngpus_physical}
+# Port
+prometheus_port=${prometheus_port}
+node_exporter_port=${node_exporter_port}
+dcgm_port=${dcgm_port}

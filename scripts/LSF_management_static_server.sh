@@ -268,4 +268,43 @@ lsf_daemons status >> $logfile
 # Due To Polkit Local Privilege Escalation Vulnerability
 chmod 0755 /usr/bin/pkexec
 
+# adjust password expiration for lsfadmin
+#passwd lsfadmin -x -1
+
+# start the prometheus server
+# but first, generate targets.json for all static workers
+cat << EOF >> /tmp/prometheus_config.sh
+import json
+import ipaddress
+
+node_list=[]
+for ip in ipaddress.IPv4Network('${rc_cidr_block}'):
+    endpoint = str(ip) + ":${node_exporter_port}"
+    node_dict={}
+    node_dict["targets"]=[endpoint]
+    node_dict["labels"]={"type": "worker"}
+    node_list.append(node_dict)
+
+json_object = json.dumps(node_list, indent=4)
+with open("/opt/prometheus-2.35.0/targets.json", "w") as outfile:
+    outfile.write(json_object)
+
+dcgm_list=[]
+for ip in ipaddress.IPv4Network('${rc_cidr_block}'):
+    endpoint = str(ip) + ":${dcgm_port}"
+    dcgm_dict={}
+    dcgm_dict["targets"]=[endpoint]
+    dcgm_dict["labels"]={"type": "worker"}
+    dcgm_list.append(dcgm_dict)
+
+json_object = json.dumps(dcgm_list, indent=4)
+with open("/opt/prometheus-2.35.0/targets-dcgm.json", "w") as outfile:
+    outfile.write(json_object)
+EOF
+# now call the python script
+python3 /tmp/prometheus_config.sh
+
+# start Prometheus after setting up the machines to be scraped
+ /opt/prometheus-2.35.0/prometheus --config.file=/opt/prometheus-2.35.0/prometheus.yml --web.listen-address=":${prometheus_port}" --storage.tsdb.path=/mnt/data/prometheus &
+
 echo END `date '+%Y-%m-%d %H:%M:%S'` >> $logfile
