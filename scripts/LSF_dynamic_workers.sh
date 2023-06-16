@@ -119,5 +119,8 @@ echo "Start the node_exporter server using port ${node_exporter_port}..." >> $lo
 #echo "Start the dcgm-exporter server using port ${dcgm_port}..." >> $logfile
 #/usr/bin/dcgm-exporter &
 
+# no need to start the grafana service on workers
+systemctl stop grafana-server
+
 echo END `date '+%Y-%m-%d %H:%M:%S'` >> $logfile
 
