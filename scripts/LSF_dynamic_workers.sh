@@ -122,5 +122,33 @@ echo "Start the node_exporter server using port ${node_exporter_port}..." >> $lo
 # no need to start the grafana service on workers
 systemctl stop grafana-server
 
+# set up local disks
+found=0
+devices=""
+for vdx in `lsblk -d -n --output NAME`; do
+  desc=$(file -s /dev/$vdx | grep ': data$' | cut -d : -f1)
+  if [ "$desc" != "" ]; then
+    echo $vdx
+    echo $desc
+    devices="$devices /dev/$vdx"
+    found=1
+  fi
+done
+if [ $found == 1 ]; then
+  yum install -y lvm2
+  pvcreate $devices
+  vgcreate nvme_vg $devices
+  lvcreate -n nvme_lv -l 100%FREE nvme_vg
+  mkfs.ext4 /dev/nvme_vg/nvme_lv
+  mkdir /nvme
+  mount /dev/nvme_vg/nvme_lv /nvme
+  chown -R lsfadmin:lsfadmin /nvme
+  #UUID=$(blkid /dev/nvme_vg/nvme_lv -o value)
+  #for col in $UUID; do
+  #  echo "UUID=$col /nvme ext4 default,noatime 0 0" >> /etc/fstab
+  #  break
+  #done
+fi
+
 echo END `date '+%Y-%m-%d %H:%M:%S'` >> $logfile
 
